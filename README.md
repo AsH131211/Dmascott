@@ -85,7 +85,7 @@ Before running Astra, ensure the following are installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/<your-username>/astra.git
+git clone https://github.com/AsH131211/astra.git
 cd astra
 ```
 
