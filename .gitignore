@@ -1,0 +1,96 @@
+# ========================
+#  Build Artifacts
+# ========================
+/target/
+**/*.rs.bk
+
+# ========================
+#  Cargo
+# ========================
+# Remove this line if you want to commit Cargo.lock for binaries
+# Cargo.lock
+
+# ========================
+#  IDE / Editor
+# ========================
+# VS Code
+.vscode/
+*.code-workspace
+
+# JetBrains (CLion, IntelliJ, RustRover)
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+.nvimrc
+.exrc
+
+# Emacs
+*~
+\#*\#
+.#*
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Zed
+.zed/
+
+# ========================
+#  OS Generated
+# ========================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+
+# ========================
+#  Environment & Secrets
+# ========================
+.env
+.env.*
+!.env.example
+
+# ========================
+#  Miscellaneous
+# ========================
+*.log
+*.pid
+*.seed
+*.pid.lock
+*.bak
+*.tmp
+*.orig
+core
+
+# Coverage & Profiling
+*.profraw
+lcov.info
+tarpaulin-report.html
+coverage/
+
+# Documentation build output (if using mdBook, etc.)
+book/
+
+# Agents / AI tooling
+.agents/
+.gemini/
