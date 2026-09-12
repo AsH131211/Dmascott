@@ -1,7 +1,7 @@
 <p align="center">
   <h1 align="center">✨ Astra</h1>
   <p align="center">
-    <strong>An AI-powered conversational chatbot built in Rust — the friendly mascot of your Tech Fest.</strong>
+    <strong>Interactive 3D AI Mascot for GECW Tech Fest — Rust backend + Three.js frontend</strong>
   </p>
   <p align="center">
     <a href="#features">Features</a> •
@@ -20,9 +20,9 @@
 
 ## Overview
 
-**Astra** is a lightweight, terminal-based chatbot written in [Rust](https://www.rust-lang.org/). It connects to a locally hosted LLM server (any OpenAI-compatible `/v1/chat/completions` endpoint) and streams responses in real time, delivering a fluid, character-by-character conversational experience directly in your terminal.
+**Astra** is the official interactive mascot for the GECW Tech Fest. It combines a **Rust-powered backend** serving a real-time LLM chat API with a **React + Three.js frontend** that renders a fully procedural, animated 3D robot character directly in the browser.
 
-Designed as the friendly mascot for a Tech Fest, Astra greets users warmly on startup and maintains full conversation context across the session.
+The 3D mascot features dynamic facial expressions on a glowing visor screen, gaze tracking, click reactions, floating hover physics, and a flowing cape — all built without any external 3D model files using purely procedural Three.js geometry.
 
 ---
 
@@ -30,51 +30,70 @@ Designed as the friendly mascot for a Tech Fest, Astra greets users warmly on st
 
 | Feature | Description |
 |---|---|
-| 🔄 **Streaming Responses** | Responses are streamed token-by-token using Server-Sent Events (SSE), providing instant visual feedback as the LLM generates text. |
-| 💬 **Multi-Turn Conversations** | Full conversation history is maintained in-memory, enabling context-aware follow-up responses. |
-| 👋 **Automatic Greeting** | Astra introduces itself at the start of every session with a warm, generated greeting. |
-| ⚡ **Async Runtime** | Built on [Tokio](https://tokio.rs/) for high-performance asynchronous I/O. |
-| 🧩 **Modular Design** | Clean separation of concerns across modules (`llm`, `io`, `main`). |
-| 🔌 **OpenAI-Compatible** | Works with any server that exposes an OpenAI-compatible chat completions API (e.g., [llama.cpp](https://github.com/ggerganov/llama.cpp), [vLLM](https://github.com/vllm-project/vllm), [Ollama](https://ollama.com/), [LM Studio](https://lmstudio.ai/)). |
+| 🤖 **3D Interactive Mascot** | Fully procedural Three.js character with white ceramic armor, glowing cyan accents, ear fin antennas, cape, and thruster boots |
+| 👀 **Animated Face Visor** | Dynamic canvas-textured visor with smiling eyes (`^ ^`), procedural blinking, cursor gaze tracking, and emotional expressions |
+| 💬 **Real-Time Chat** | SSE-streamed responses from the Rust backend with typing animation and speech bubble UI |
+| 🌌 **Cosmic 3D Scene** | Rotating starfield, data dust particles, neon ground projection, and studio PBR lighting with environment reflections |
+| 🎭 **Dynamic Expressions** | Happy, thinking, speaking, poked, and winking face states that react to user interaction |
+| 🔄 **Streaming Responses** | Token-by-token SSE streaming from any OpenAI-compatible local LLM |
+| 🧠 **Multi-Turn Memory** | Full conversation history maintained in-memory for context-aware follow-up responses |
+| 🔌 **LLM Fallback** | Smart fallback responses when the local LLM server is offline |
+| ⚡ **Async Rust Backend** | Built on Axum + Tokio for high-performance async serving |
 
 ---
 
 ## Architecture
 
 ```
-┌────────────────────────────────────────────────────────┐
-│                        main.rs                         │
-│   Entry point — event loop, user input dispatch        │
-├──────────────────────┬─────────────────────────────────┤
-│       io.rs          │            llm.rs               │
-│  Terminal I/O:       │  Chat client:                   │
-│  • Read user input   │  • Manage conversation history  │
-│  • Prompt formatting │  • Build API request payloads   │
-│                      │  • Stream & parse SSE responses │
-└──────────────────────┴─────────────────────────────────┘
-                            │
-                            ▼
-                 ┌─────────────────────┐
-                 │  LLM Server (local) │
-                 │  OpenAI-compatible  │
-                 │  /v1/chat/completions│
-                 └─────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                     Browser (Frontend)                       │
+│  ┌─────────────┐  ┌──────────────┐  ┌───────────────────┐  │
+│  │ AstroCanvas  │  │  ChatDock    │  │  SpeechBubbles    │  │
+│  │ (Three.js)   │  │  (React)     │  │  (React)          │  │
+│  │ 3D Mascot    │  │  Input bar   │  │  Floating cards   │  │
+│  │ + Starfield  │  │  + Chips     │  │  + Dismiss        │  │
+│  └──────┬───────┘  └──────┬───────┘  └───────────────────┘  │
+│         │                  │                                  │
+│         └──── App.jsx ─────┘                                  │
+│              (State coordination)                             │
+├───────────────────────┬───────────────────────────────────────┤
+│                       │  POST /api/chat (SSE)                 │
+│                       ▼                                       │
+│            ┌─────────────────────┐                            │
+│            │   Axum Web Server   │  ← Serves web/ static     │
+│            │   (src/main.rs)     │     files + API            │
+│            ├─────────┬───────────┤                            │
+│            │ llm.rs  │ memory.rs │                            │
+│            │ Chat    │ History   │                            │
+│            └────┬────┴───────────┘                            │
+│                 │                                             │
+│                 ▼                                             │
+│      ┌─────────────────────┐                                  │
+│      │  Local LLM Server   │                                  │
+│      │  (OpenAI-compatible) │                                  │
+│      │  :8080               │                                  │
+│      └─────────────────────┘                                  │
+└───────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## Prerequisites
 
-Before running Astra, ensure the following are installed:
-
 - **Rust toolchain** (1.85+, edition 2024) — install via [rustup](https://rustup.rs/):
   ```bash
   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
   ```
 
-- **A locally running LLM server** exposing an OpenAI-compatible API at `http://127.0.0.1:8080/v1/chat/completions`. Popular options include:
-  - [llama.cpp server](https://github.com/ggerganov/llama.cpp) — `llama-server -m <model.gguf> --port 8080`
-  - [Ollama](https://ollama.com/) — `ollama serve` (default port 11434; adjust URL accordingly)
+- **Node.js** (v20+) — for building the frontend:
+  ```bash
+  # Using nvm (recommended)
+  nvm install 20
+  ```
+
+- **A locally running LLM server** (optional — Astra falls back to built-in responses when offline). Compatible servers:
+  - [llama.cpp](https://github.com/ggerganov/llama.cpp) — `llama-server -m <model.gguf> --port 8080`
+  - [Ollama](https://ollama.com/) — `ollama serve`
   - [LM Studio](https://lmstudio.ai/) — start the local server from the UI
   - [vLLM](https://github.com/vllm-project/vllm) — `vllm serve <model> --port 8080`
 
@@ -85,68 +104,84 @@ Before running Astra, ensure the following are installed:
 ### 1. Clone the Repository
 
 ```bash
+<<<<<<< HEAD
 git clone https://github.com/AsH131211/astra.git
 cd astra
+=======
+git clone https://github.com/AsH131211/Dmascott.git
+cd Dmascott
+>>>>>>> 7209276 (2 st commit)
 ```
 
-### 2. Start Your LLM Server
-
-Make sure your local LLM server is running. For example, with llama.cpp:
+### 2. Install Frontend Dependencies & Build
 
 ```bash
-llama-server -m ./models/your-model.gguf --port 8080
+npm install
+npm run build
 ```
 
-### 3. Build & Run
+This compiles the React + Three.js frontend into `web/`, which the Rust server serves as static files.
+
+### 3. Build & Run the Server
 
 ```bash
 cargo run
 ```
 
-For an optimized release build:
+You'll see:
 
-```bash
-cargo run --release
 ```
+═════════════════════════════════════════════════════════
+✨ Astra 3D Interactive Mascot & LLM Server Started!
+🌐 Access 3D Web UI:  http://localhost:3000
+🔌 API Endpoint:      http://localhost:3000/api/chat
+💬 Terminal CLI Mode: cargo run -- --cli
+═════════════════════════════════════════════════════════
+```
+
+### 4. Open in Browser
+
+Navigate to **http://localhost:3000** to interact with the 3D Astra mascot.
 
 ---
 
 ## Usage
 
-Once launched, Astra greets you automatically and waits for your input:
+### Web UI (3D Interactive Mode)
+
+- **Move your mouse** — Astra's head and eyes track your cursor
+- **Click on Astra** — triggers a poke reaction (squeeze eyes, excited bounce)
+- **Type in the chat bar** — sends your message to the LLM backend
+- **Suggestion chips** — quick-access prompts for Events, Workshops, etc.
+- **Scroll orbit** — rotate the 3D camera around Astra
+
+### Terminal CLI Mode
+
+```bash
+cargo run -- --cli
+```
 
 ```
-Astra : Hey there! 👋 I'm Astra, your friendly Tech Fest guide. Ask me anything!
+Astra : Hey there! 👋 I'm Astra, your friendly Tech Fest guide!
 
 >>> : What events are happening today?
 Astra : Great question! Let me tell you about today's lineup...
 
 >>> : exit
-Astra : Bye! See you at the Tech Fest! 👋
 ```
-
-### Commands
-
-| Input | Action |
-|---|---|
-| Any text | Sends the message to Astra and receives a streamed response |
-| `exit` or `quit` | Ends the conversation and exits the program |
-| *(empty input)* | Skipped — Astra waits for the next message |
 
 ---
 
 ## Configuration
 
-Astra's configuration is currently embedded in the source code. Key parameters can be adjusted in [`src/llm.rs`](src/llm.rs):
-
 | Parameter | Location | Default | Description |
 |---|---|---|---|
-| **API URL** | `Chat::new()` | `http://127.0.0.1:8080/v1/chat/completions` | Endpoint of the LLM server |
-| **System Prompt** | `Chat::new()` | *"You are Astra, a mascot for a Tech Fest..."* | Defines Astra's personality and role |
-| **Temperature** | `greet()` / `send()` | `0.7` | Controls response randomness (0.0 = deterministic, 1.0 = creative) |
-| **Max Tokens (Greeting)** | `greet()` | `200` | Token limit for the initial greeting |
-| **Max Tokens (Reply)** | `send()` | `1000` | Token limit for conversation replies |
-| **Thinking Mode** | `greet()` / `send()` | `false` | Enables/disables chain-of-thought reasoning via `enable_thinking` |
+| **Web Server Port** | `src/main.rs` | `3000` (auto-fallback to `3001+`) | HTTP port for the web UI and API |
+| **LLM API URL** | `src/llm.rs` | `http://127.0.0.1:8080` | Local LLM server endpoint |
+| **System Prompt** | `src/llm.rs` | *"You are Astra, mascot for GECW Tech Fest..."* | Astra's personality definition |
+| **Temperature** | `src/llm.rs` | `0.7` | Response randomness (0.0–1.0) |
+| **Max Tokens** | `src/llm.rs` | `1000` | Token limit per response |
+| **Static Files Dir** | `src/main.rs` | `web/` | Frontend build output directory |
 
 ---
 
@@ -154,72 +189,97 @@ Astra's configuration is currently embedded in the source code. Key parameters c
 
 ```
 astra/
-├── Cargo.toml          # Package manifest & dependency declarations
-├── Cargo.lock          # Exact dependency versions (committed for reproducibility)
-├── .gitignore          # Git ignore rules
-├── README.md           # This file
-└── src/
-    ├── main.rs         # Entry point — async runtime, REPL event loop
-    ├── llm.rs          # LLM client — chat state, API calls, SSE stream parsing
-    └── io.rs           # Terminal I/O — user input reading & prompt display
+├── Cargo.toml              # Rust package manifest
+├── Cargo.lock              # Locked dependency versions
+├── package.json            # Node.js manifest (frontend build)
+├── vite.config.js          # Vite bundler config
+├── .gitignore
+├── README.md
+│
+├── src/                    # Rust Backend
+│   ├── main.rs             # Axum server — static file serving + API routes
+│   ├── llm.rs              # LLM client — SSE streaming, fallback responses
+│   ├── memory.rs           # Multi-turn conversation memory
+│   └── io.rs               # Terminal I/O for CLI mode
+│
+├── frontend/               # React + Three.js Frontend Source
+│   ├── src/
+│   │   ├── main.jsx        # React entry point
+│   │   ├── App.jsx         # Root component — state coordination
+│   │   ├── App.css         # Global styles
+│   │   ├── components/
+│   │   │   ├── AstroCanvas.jsx    # Three.js 3D viewport & animation loop
+│   │   │   ├── ChatDock.jsx       # Floating chat input bar
+│   │   │   ├── SpeechBubbles.jsx  # 3D-projected message bubbles
+│   │   │   └── TopNav.jsx         # Brand badge
+│   │   └── utils/
+│   │       └── astra3DModel.js    # Procedural 3D mascot builder
+│   └── public/             # Static assets
+│
+└── web/                    # Production build output (served by Rust)
+    ├── index.html
+    └── assets/
+        ├── index-*.js      # Bundled JS
+        └── index-*.css     # Bundled CSS
 ```
 
-### Dependencies
+### Backend Dependencies
 
-| Crate | Version | Purpose |
-|---|---|---|
-| [`tokio`](https://crates.io/crates/tokio) | 1.x | Async runtime with full feature set |
-| [`reqwest`](https://crates.io/crates/reqwest) | 0.12 | HTTP client with JSON & streaming support |
-| [`serde`](https://crates.io/crates/serde) | 1.x | Serialization/deserialization framework |
-| [`serde_json`](https://crates.io/crates/serde_json) | 1.x | JSON parsing & construction |
-| [`futures-util`](https://crates.io/crates/futures-util) | 0.3.34 | Stream combinators for async byte stream processing |
+| Crate | Purpose |
+|---|---|
+| [`axum`](https://crates.io/crates/axum) | Web framework — routing, middleware |
+| [`tokio`](https://crates.io/crates/tokio) | Async runtime |
+| [`tower-http`](https://crates.io/crates/tower-http) | Static file serving, CORS |
+| [`reqwest`](https://crates.io/crates/reqwest) | HTTP client for LLM API |
+| [`serde`](https://crates.io/crates/serde) / [`serde_json`](https://crates.io/crates/serde_json) | JSON serialization |
+| [`async-stream`](https://crates.io/crates/async-stream) | SSE token streaming |
+
+### Frontend Dependencies
+
+| Package | Purpose |
+|---|---|
+| [`react`](https://react.dev/) | UI framework |
+| [`three`](https://threejs.org/) | 3D rendering engine |
+| [`vite`](https://vite.dev/) | Build tooling |
+| [`lucide-react`](https://lucide.dev/) | Icon library |
 
 ---
 
 ## Contributing
 
-Contributions are welcome! To get started:
-
 1. **Fork** the repository
-2. **Create** a feature branch:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-3. **Commit** your changes with clear, descriptive messages:
-   ```bash
-   git commit -m "feat: add configurable API endpoint via environment variable"
-   ```
-4. **Push** to your fork:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-5. **Open a Pull Request** against `main`
+2. **Create** a feature branch: `git checkout -b feature/your-feature`
+3. **Commit** with descriptive messages: `git commit -m "feat: add new expression state"`
+4. **Push** and open a Pull Request
 
 ### Guidelines
 
-- Follow standard Rust formatting (`cargo fmt`)
-- Ensure all code passes `cargo clippy` without warnings
-- Write descriptive commit messages following [Conventional Commits](https://www.conventionalcommits.org/)
+- Rust: `cargo fmt` + `cargo clippy` with no warnings
+- Frontend: consistent code style, no console warnings
+- Follow [Conventional Commits](https://www.conventionalcommits.org/)
 
 ---
 
 ## Roadmap
 
-- [ ] Environment variable / config file support for API URL and parameters
-- [ ] Custom system prompt via CLI argument or config
-- [ ] Conversation export (save chat history to file)
-- [ ] Colored terminal output with rich formatting
-- [ ] Support for multiple LLM backends with auto-detection
-- [ ] Token usage tracking and display
+- [x] 3D interactive web mascot with Three.js
+- [x] SSE streaming chat with Rust backend
+- [x] Procedural facial expressions and gaze tracking
+- [x] Multi-turn conversation memory
+- [ ] Environment variable / config file support
+- [ ] Voice input / TTS output
+- [ ] Conversation export (save chat history)
+- [ ] Mobile touch gesture support
+- [ ] Multiplayer / shared mascot sessions
 
 ---
 
 ## License
 
-This project is open source. Add a `LICENSE` file to specify the license under which this project is distributed.
+This project is open source. Add a `LICENSE` file to specify your preferred license.
 
 ---
 
 <p align="center">
-  Built with 🦀 Rust and ❤️ for the Tech Fest
+  Built with 🦀 Rust, ⚛️ React, 🎮 Three.js, and ❤️ for GECW Tech Fest
 </p>

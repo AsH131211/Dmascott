@@ -7,8 +7,18 @@
 # ========================
 #  Cargo
 # ========================
-# Remove this line if you want to commit Cargo.lock for binaries
-# Cargo.lock
+# Cargo.lock is committed for binary reproducibility
+
+# ========================
+#  Node / Frontend
+# ========================
+node_modules/
+frontend/node_modules/
+
+# Vite build output (served by Rust backend from web/)
+# web/ is the production build — commit it for deployment
+# Uncomment below if you prefer to build on deploy instead:
+# /web/
 
 # ========================
 #  IDE / Editor
@@ -32,7 +42,6 @@ out/
 .exrc
 
 # Emacs
-*~
 \#*\#
 .#*
 
@@ -88,9 +97,12 @@ lcov.info
 tarpaulin-report.html
 coverage/
 
-# Documentation build output (if using mdBook, etc.)
+# Documentation build output
 book/
 
 # Agents / AI tooling
 .agents/
 .gemini/
+
+# Chat history data
+data/

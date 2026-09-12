@@ -1,0 +1,460 @@
+/* ===================================================================
+   APP.CSS — Astra Clean 3D Holodeck UI System
+   =================================================================== */
+
+:root {
+  --font-main: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  --bg-primary: #04060d;
+  --bg-glass: rgba(12, 17, 30, 0.65);
+  --bg-glass-card: rgba(14, 20, 36, 0.88);
+
+  --border-glass: rgba(255, 255, 255, 0.1);
+  --border-focus: rgba(0, 220, 255, 0.45);
+  --border-card: rgba(0, 140, 255, 0.3);
+
+  --cyan-neon: #00f2ff;
+  --cyan-glow: rgba(0, 242, 255, 0.35);
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-subtle: #64748b;
+
+  --shadow-dock: 0 16px 40px -10px rgba(0, 0, 0, 0.75), 0 0 25px rgba(0, 140, 255, 0.12);
+  --shadow-bubble: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 20px rgba(0, 220, 255, 0.14);
+  --shadow-card: 0 20px 50px rgba(0, 0, 0, 0.75), 0 0 30px rgba(0, 140, 255, 0.18);
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+.app-container {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ─── 3D Viewport ────────────────────────────────────────── */
+#three-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+  z-index: 1;
+}
+
+/* ─── Top Bar ────────────────────────────────────────────── */
+.top-nav {
+  position: absolute;
+  top: 20px;
+  left: 24px;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 16px;
+  border-radius: 9999px;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  backdrop-filter: blur(16px);
+  pointer-events: auto;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--cyan-neon);
+  box-shadow: 0 0 8px var(--cyan-neon);
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+
+.brand-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #fff;
+}
+
+/* ─── 3D Speech Bubbles ──────────────────────────────────── */
+.speech-bubbles-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 20;
+}
+
+.speech-bubble {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: auto;
+  will-change: transform;
+  transition: opacity 0.3s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: bubble-in 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes bubble-in {
+  from { opacity: 0; transform: scale(0.85) translateY(10px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.speech-bubble--user {
+  background: rgba(26, 36, 60, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 18px 18px 4px 18px;
+  padding: 10px 16px;
+  max-width: 270px;
+  color: #fff;
+  font-size: 0.88rem;
+  box-shadow: var(--shadow-bubble);
+  backdrop-filter: blur(18px);
+}
+
+.speech-bubble--bot {
+  background: var(--bg-glass-card);
+  border: 1px solid rgba(0, 220, 255, 0.35);
+  border-radius: 18px 18px 18px 4px;
+  padding: 12px 18px;
+  max-width: 320px;
+  color: #f1f5f9;
+  font-size: 0.92rem;
+  line-height: 1.48;
+  box-shadow: var(--shadow-bubble);
+  backdrop-filter: blur(22px);
+}
+
+.typing-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 6px;
+}
+
+.typing-dots span {
+  width: 6px;
+  height: 6px;
+  background-color: var(--cyan-neon);
+  border-radius: 50%;
+  animation: typing-bounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing-bounce {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.3; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+.stream-cursor {
+  display: inline-block;
+  color: var(--cyan-neon);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  margin-left: 2px;
+  animation: blink-cursor 0.7s infinite;
+}
+
+@keyframes blink-cursor {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* ─── Adaptive Card (Long Responses) ─────────────────────── */
+.speech-bubble.adaptive-card {
+  width: 440px;
+  max-width: 92vw;
+  background: var(--bg-glass-card);
+  border: 1px solid var(--border-card);
+  border-radius: 18px;
+  padding: 0;
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(26px);
+  overflow: hidden;
+  animation: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes card-in {
+  from { width: 300px; opacity: 0.6; transform: scale(0.92); }
+  to { width: 440px; opacity: 1; transform: scale(1); }
+}
+
+.adaptive-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 9px 16px;
+  background: rgba(0, 136, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 136, 255, 0.18);
+}
+
+.card-badge {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #bae6fd;
+}
+
+.card-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.card-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.speech-bubble.adaptive-card .speech-bubble__content {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 14px 18px;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: #f1f5f9;
+}
+
+.speech-bubble.adaptive-card .speech-bubble__content::-webkit-scrollbar {
+  width: 5px;
+}
+.speech-bubble.adaptive-card .speech-bubble__content::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+}
+.speech-bubble.adaptive-card .speech-bubble__content::-webkit-scrollbar-thumb {
+  background: rgba(0, 136, 255, 0.5);
+  border-radius: 4px;
+}
+
+.bullet-list {
+  list-style: none;
+  margin: 8px 0;
+  padding-left: 2px;
+}
+
+.bullet-item {
+  position: relative;
+  padding-left: 18px;
+  margin-bottom: 6px;
+}
+
+.bullet-item::before {
+  content: "▹";
+  position: absolute;
+  left: 0;
+  color: var(--cyan-neon);
+}
+
+/* ─── Thought Bubble ─────────────────────────────────────── */
+.speech-bubble--thought {
+  background: rgba(14, 22, 42, 0.88);
+  border: 1px dashed rgba(0, 220, 255, 0.35);
+  border-radius: 20px;
+  padding: 10px 16px;
+  max-width: 250px;
+  color: #bae6fd;
+  font-size: 0.84rem;
+  font-style: italic;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 6px 20px rgba(0, 140, 255, 0.15);
+}
+
+.thought-tail {
+  position: absolute;
+  bottom: -15px;
+  left: 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.thought-tail .dot-1 {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(0, 220, 255, 0.6);
+}
+
+.thought-tail .dot-2 {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(0, 220, 255, 0.35);
+}
+
+/* ─── Clean Bottom Dock ──────────────────────────────────── */
+.bottom-dock {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(640px, 94vw);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.chips-tray {
+  display: flex;
+  gap: 7px;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 2px 4px;
+  scrollbar-width: none;
+}
+.chips-tray::-webkit-scrollbar { display: none; }
+
+.chip {
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  color: #cbd5e1;
+  padding: 6px 13px;
+  border-radius: 9999px;
+  font-family: var(--font-main);
+  font-size: 0.8rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  backdrop-filter: blur(16px);
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.chip:hover:not(:disabled) {
+  background: rgba(22, 32, 58, 0.9);
+  border-color: rgba(0, 220, 255, 0.4);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 200, 255, 0.2);
+}
+
+.chip:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.chip--action {
+  border-color: rgba(0, 136, 255, 0.3);
+  color: #bae6fd;
+}
+
+.input-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-glass-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 9999px;
+  padding: 7px 10px 7px 18px;
+  backdrop-filter: blur(24px);
+  box-shadow: var(--shadow-dock);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.input-bar:focus-within {
+  border-color: var(--border-focus);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.8), 0 0 28px rgba(0, 220, 255, 0.25);
+}
+
+.input-bar__field-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+#chat-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #fff;
+  font-family: var(--font-main);
+  font-size: 0.93rem;
+  line-height: 1.4;
+  resize: none;
+  max-height: 100px;
+  padding: 3px 0;
+}
+
+#chat-input::placeholder {
+  color: var(--text-subtle);
+}
+
+.input-bar__send {
+  background: linear-gradient(135deg, #00b4d8, #0077b6);
+  border: none;
+  color: #fff;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.18s ease, box-shadow 0.18s ease;
+  box-shadow: 0 4px 12px rgba(0, 180, 216, 0.4);
+  flex-shrink: 0;
+}
+
+.input-bar__send:hover:not(:disabled) {
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(0, 220, 255, 0.6);
+}
+
+.input-bar__send:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: #1e293b;
+}
+
+@media (max-width: 640px) {
+  .top-nav {
+    top: 14px;
+    left: 14px;
+  }
+  .bottom-dock {
+    bottom: 14px;
+  }
+  .speech-bubble.adaptive-card {
+    width: 330px;
+  }
+}

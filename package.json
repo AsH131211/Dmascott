@@ -1,0 +1,28 @@
+{
+  "name": "astra",
+  "version": "1.0.0",
+  "description": "<p align=\"center\">   <h1 align=\"center\">✨ Astra</h1>   <p align=\"center\">     <strong>An AI-powered conversational chatbot built in Rust — the friendly mascot of your Tech Fest.</strong>   </p>   <p align=\"center\">     <a href=\"#features\">Features</a> •     <a href=\"#architecture\">Architecture</a> •     <a href=\"#prerequisites\">Prerequisites</a> •     <a href=\"#getting-started\">Getting Started</a> •     <a href=\"#usage\">Usage</a> •     <a href=\"#configuration\">Configuration</a> •     <a href=\"#project-structure\">Project Structure</a> •     <a href=\"#contributing\">Contributing</a> •     <a href=\"#license\">License</a>   </p> </p>",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AsH131211/Dmascott.git"
+  },
+  "keywords": [],
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/AsH131211/Dmascott/issues"
+  },
+  "homepage": "https://github.com/AsH131211/Dmascott#readme",
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
+    "lucide-react": "^1.45.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "three": "^0.186.0",
+    "vite": "^8.3.0"
+  }
+}
