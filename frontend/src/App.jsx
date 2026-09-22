@@ -1,96 +1,47 @@
 /* ===================================================================
-   APP.JSX — Astra Interactive 3D Mascot Web Application
+   APP.JSX — Astra Pure 3D Galaxy Interface
+   Full-screen 3D interactive galaxy with floating type area
    =================================================================== */
 
-import React, { useState, useEffect } from 'react';
-import { AstroCanvas } from './components/AstroCanvas';
-import { TopNav } from './components/TopNav';
-import { SpeechBubbles } from './components/SpeechBubbles';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { ParticleField, particleEngine } from './components/ParticleField';
 import { ChatDock } from './components/ChatDock';
+import { FaceRecognition } from './components/FaceRecognition';
 import './App.css';
 
-const RANDOM_THOUGHTS = [
-  "Wonder if quantum computers dream in superpositions... 🌌",
-  "Don't forget to refuel at Food Truck Alley! 🍕",
-  "Hackathon clock is ticking — build something epic! ⚡",
-  "My neural circuits are running at peak clock speed! 🤖",
-  "Check out the Autonomous Drone workshop in Maker Yard! 🛠️",
-  "Ask me anything about today's schedule or workshops! ✨",
-  "Tip: You can poke or click me anytime for a reaction! 👋",
-];
+function formatMessage(text) {
+  if (!text) return '';
+  let html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/^[•\-\*]\s+(.*)$/gm, '<li class="bullet-item">$1</li>');
+  html = html.replace(/(<li.*<\/li>)/s, '<ul class="bullet-list">$1</ul>');
+  html = html.replace(/\n/g, '<br>');
+  return html;
+}
 
 export default function App() {
-  const [actionTrigger, setActionTrigger] = useState('idle');
-  const [robotScreenPos, setRobotScreenPos] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [streamingMessage, setStreamingMessage] = useState(null);
+  const [streamingText, setStreamingText] = useState(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const messagesEndRef = useRef(null);
 
-  // Initial greeting
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setActionTrigger('wave');
-      addMessage({
-        id: 'welcome',
-        type: 'bot',
-        text: "👋 Hi! I'm **Astra**, the GECW Tech Fest mascot! Ask me anything about today's events or workshops!",
-      });
-      setTimeout(() => setActionTrigger('idle'), 2500);
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Idle Thought Timer
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (!isGenerating && messages.length === 0) {
-        const thought = RANDOM_THOUGHTS[Math.floor(Math.random() * RANDOM_THOUGHTS.length)];
-        setActionTrigger('think');
-        addMessage({
-          id: 'thought-' + Date.now(),
-          type: 'thought',
-          text: thought,
-        });
-        setTimeout(() => setActionTrigger('idle'), 3500);
-      }
-    }, 22000);
-
-    return () => clearInterval(interval);
-  }, [isGenerating, messages.length]);
-
-  const addMessage = (msg) => {
-    setMessages((prev) => [...prev, msg]);
-    const duration = Math.min(25000, Math.max(7000, msg.text.length * 60));
-    setTimeout(() => {
-      setMessages((prev) => prev.filter((m) => m.id !== msg.id));
-    }, duration);
-  };
-
-  const handleDismissMessage = (id) => {
-    setMessages((prev) => prev.filter((m) => m.id !== id));
-  };
-
-  const handleMascotClick = () => {
-    const reactions = ['poke', 'giggle', 'high_five', 'wave'];
-    const chosen = reactions[Math.floor(Math.random() * reactions.length)];
-    setActionTrigger(chosen);
-    setTimeout(() => setActionTrigger('idle'), 1800);
-  };
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, streamingText]);
 
   // SSE Chat Stream with Rust backend
   const handleSendMessage = async (text) => {
     if (isGenerating) return;
 
     setIsGenerating(true);
-    const userMsgId = 'u-' + Date.now();
-    addMessage({ id: userMsgId, type: 'user', text });
+    const userMsg = { id: 'u-' + Date.now(), type: 'user', text };
+    setMessages((prev) => [...prev, userMsg]);
+    setStreamingText('');
 
-    // Bot enters thinking state
-    setActionTrigger('think');
-    setStreamingMessage({ text: '' });
-
-    let hasStartedSpeaking = false;
     let fullText = '';
 
     try {
@@ -123,69 +74,99 @@ export default function App() {
           try {
             const payload = JSON.parse(dataStr);
             if (payload.token) {
-              if (!hasStartedSpeaking) {
-                hasStartedSpeaking = true;
-                setActionTrigger('speaking');
-              }
               fullText += payload.token;
-              setStreamingMessage({ text: fullText });
+              setStreamingText(fullText);
             }
             if (payload.done) break;
           } catch {
             fullText += dataStr;
-            setStreamingMessage({ text: fullText });
+            setStreamingText(fullText);
           }
         }
       }
 
-      setStreamingMessage(null);
-      addMessage({ id: 'b-' + Date.now(), type: 'bot', text: fullText });
-      setActionTrigger('happy');
-      setTimeout(() => setActionTrigger('idle'), 2400);
-
-    } catch (err) {
-      console.warn('Backend unavailable, showing fallback:', err);
-      setStreamingMessage(null);
-      addMessage({
-        id: 'err-' + Date.now(),
-        type: 'bot',
-        text: "✨ Astra is ready! (Note: Running in resilient fallback mode until local LLM server is active).",
-      });
-      setActionTrigger('idle');
+      setStreamingText(null);
+      setMessages((prev) => [
+        ...prev,
+        { id: 'b-' + Date.now(), type: 'bot', text: fullText },
+      ]);
+      particleEngine.success();
+    } catch {
+      setStreamingText(null);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: 'err-' + Date.now(),
+          type: 'bot',
+          text: "✨ Astra is ready! (Note: Running in resilient mode until local LLM server is active).",
+        },
+      ]);
+      particleEngine.error();
     } finally {
       setIsGenerating(false);
     }
   };
 
+  // Face recognition greeting handler
+  const handleFaceRecognized = useCallback(
+    (name) => {
+      // Auto-send a greeting request through the chat pipeline
+      handleSendMessage(
+        `The user "${name}" has just been recognized by the face recognition camera. Greet them warmly and personally by name! Be enthusiastic and welcoming. Keep it brief (1-2 sentences).`
+      );
+    },
+    [isGenerating]
+  );
+
+  const hasMessages = messages.length > 0 || streamingText !== null;
+
+  // Derive galaxy particle state from conversation activity
+  const chatState = useMemo(() => {
+    if (streamingText !== null && streamingText.length > 0) return 'streaming';
+    if (isGenerating) return 'thinking';
+    return 'idle';
+  }, [isGenerating, streamingText]);
+
   return (
-    <div className="app-container">
-      {/* 3D Cosmic Holodeck Canvas & Astra 3D Character */}
-      <AstroCanvas
-        actionTrigger={actionTrigger}
-        onMascotClick={handleMascotClick}
-        onRobotPosUpdate={setRobotScreenPos}
-      />
+    <div className="galaxy-app">
+      {/* Fully Occupied 3D Galaxy Canvas */}
+      <ParticleField chatState={chatState} />
 
-      {/* Clean Top Navigation Bar */}
-      <TopNav />
+      {/* Floating Translucent Message Stream (only appears when chatting) */}
+      {hasMessages && (
+        <div className="messages-stream">
+          {messages.map((msg) => (
+            <div key={msg.id} className={`message message--${msg.type}`}>
+              <span dangerouslySetInnerHTML={{ __html: formatMessage(msg.text) }} />
+            </div>
+          ))}
 
-      {/* 3D Speech Bubbles & Adaptive Holographic Cards */}
-      <SpeechBubbles
-        messages={messages}
-        streamingMessage={streamingMessage}
-        robotScreenPos={robotScreenPos}
-        onDismissMessage={handleDismissMessage}
-      />
+          {streamingText !== null && (
+            <div className="message message--bot">
+              {streamingText ? (
+                <>
+                  <span dangerouslySetInnerHTML={{ __html: formatMessage(streamingText) }} />
+                  <span className="stream-cursor">▌</span>
+                </>
+              ) : (
+                <div className="typing-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              )}
+            </div>
+          )}
 
-      {/* Clean Minimalist Bottom Dock */}
-      <ChatDock
-        onSendMessage={handleSendMessage}
-        isGenerating={isGenerating}
-        onTriggerAction={(action) => {
-          setActionTrigger(action);
-          setTimeout(() => setActionTrigger('idle'), 2000);
-        }}
-      />
+          <div ref={messagesEndRef} />
+        </div>
+      )}
+
+      {/* The Type Area — Clean, Floating Input Bar */}
+      <ChatDock onSendMessage={handleSendMessage} isGenerating={isGenerating} />
+
+      {/* Face Recognition — Webcam Preview (Bottom Left) */}
+      <FaceRecognition onFaceRecognized={handleFaceRecognized} />
     </div>
   );
 }

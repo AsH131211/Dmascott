@@ -3,6 +3,7 @@ use reqwest::Client;
 use serde::Deserialize;
 use std::time::Duration;
 use tokio::sync::mpsc;
+use tracing::{info, warn};
 
 use crate::memory::Memory;
 
@@ -32,6 +33,7 @@ impl Chat {
     pub fn new() -> Self {
         let mem = Memory::new(10);
         let loaded = mem.load();
+        let history_count = loaded.len();
         let memory = std::sync::Arc::new(tokio::sync::Mutex::new(mem));
 
         let system_prompt = serde_json::json!({
@@ -41,6 +43,8 @@ impl Chat {
 
         let mut messages = vec![system_prompt];
         messages.extend(loaded);
+
+        info!("LLM chat initialized (loaded {} history messages)", history_count);
 
         Chat {
             client: Client::builder()
@@ -53,7 +57,7 @@ impl Chat {
         }
     }
 
-    /// Streams response tokens through an mpsc channel for Web SSE or async consumption.
+    /// Streams response tokens through an mpsc channel.
     pub async fn stream_message(&mut self, message: String) -> mpsc::Receiver<String> {
         let (tx, rx) = mpsc::channel::<String>(100);
 
@@ -73,13 +77,12 @@ impl Chat {
         });
 
         let response = self.client.post(&self.url).json(&body).send().await;
-
         let mut client_messages = self.messages.clone();
         let mem = self.memory.clone();
 
         match response {
             Ok(resp) if resp.status().is_success() => {
-                let mem = mem.clone();
+                info!("LLM connected — streaming response");
                 tokio::spawn(async move {
                     let mut stream = resp.bytes_stream();
                     let mut buffer = String::new();
@@ -126,7 +129,7 @@ impl Chat {
                 });
             }
             _ => {
-                // Fallback demo responder if local LLM is offline
+                warn!("LLM server unreachable — using fallback responses");
                 tokio::spawn(async move {
                     let fallback_text = get_smart_fallback(&message);
                     let words: Vec<&str> = fallback_text.split_inclusive(' ').collect();
@@ -154,11 +157,13 @@ impl Chat {
         rx
     }
 
-    /// CLI greeting method
+    /// CLI greeting
     pub async fn greet(&mut self) {
-        println!("✨ Astra is waking up...");
-        let mut rx = self.stream_message("Greet me warmly in a short, friendly sentence. Introduce yourself as Astra, the Tech Fest mascot!".to_string()).await;
-        print!("Astra : ");
+        info!("CLI greeting started");
+        let mut rx = self.stream_message(
+            "Greet me warmly in a short, friendly sentence. Introduce yourself as Astra, the Tech Fest mascot!".to_string()
+        ).await;
+        print!("Astra: ");
         while let Some(token) = rx.recv().await {
             print!("{}", token);
             use std::io::Write;
@@ -170,7 +175,7 @@ impl Chat {
     /// CLI send message
     pub async fn send(&mut self, message: String) {
         let mut rx = self.stream_message(message).await;
-        print!("Astra : ");
+        print!("Astra: ");
         while let Some(token) = rx.recv().await {
             print!("{}", token);
             use std::io::Write;
@@ -180,7 +185,7 @@ impl Chat {
     }
 }
 
-/// Dynamic contextual fallback when local LLM server is not reachable
+/// Contextual fallback when local LLM server is not reachable
 fn get_smart_fallback(msg: &str) -> String {
     let lower = msg.to_lowercase();
     if lower.contains("event") || lower.contains("today") || lower.contains("schedule") {

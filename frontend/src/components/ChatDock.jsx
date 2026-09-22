@@ -1,13 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Send } from 'lucide-react';
 
-const SUGGESTIONS = [
-  { label: '🎪 Events', query: '🎪 What events are happening today?' },
-  { label: '🛠️ Workshops', query: '🛠️ Tell me about the tech workshops' },
-  { label: '🍕 Food & Cafe', query: '🍕 Where can I grab food or coffee?' },
-];
-
-export function ChatDock({ onSendMessage, isGenerating, onTriggerAction }) {
+export function ChatDock({ onSendMessage, isGenerating }) {
   const [input, setInput] = useState('');
   const textareaRef = useRef(null);
 
@@ -15,7 +9,7 @@ export function ChatDock({ onSendMessage, isGenerating, onTriggerAction }) {
     setInput(e.target.value);
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 100) + 'px';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
     }
   };
 
@@ -37,34 +31,7 @@ export function ChatDock({ onSendMessage, isGenerating, onTriggerAction }) {
   };
 
   return (
-    <footer className="bottom-dock">
-      {/* Suggestion Chips */}
-      <div className="chips-tray">
-        {SUGGESTIONS.map((s) => (
-          <button
-            key={s.label}
-            className="chip"
-            onClick={() => onSendMessage(s.query)}
-            disabled={isGenerating}
-          >
-            {s.label}
-          </button>
-        ))}
-        <button
-          className="chip chip--action"
-          onClick={() => onTriggerAction('wave')}
-        >
-          👋 Wave
-        </button>
-        <button
-          className="chip chip--action"
-          onClick={() => onTriggerAction('giggle')}
-        >
-          ✨ Spin
-        </button>
-      </div>
-
-      {/* Input Bar */}
+    <div className="chat-dock">
       <div className="input-bar">
         <div className="input-bar__field-wrap">
           <textarea
@@ -88,6 +55,6 @@ export function ChatDock({ onSendMessage, isGenerating, onTriggerAction }) {
           <Send size={16} />
         </button>
       </div>
-    </footer>
+    </div>
   );
 }

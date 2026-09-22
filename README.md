@@ -1,18 +1,17 @@
 <p align="center">
   <h1 align="center">✨ Astra</h1>
   <p align="center">
-    <strong>Interactive 3D AI Mascot for GECW Tech Fest — Rust backend + Three.js frontend</strong>
+    <strong>AI-Powered Interactive Mascot with Face Recognition — Built in Rust + React</strong>
   </p>
   <p align="center">
     <a href="#features">Features</a> •
-    <a href="#architecture">Architecture</a> •
-    <a href="#prerequisites">Prerequisites</a> •
+    <a href="#requirements">Requirements</a> •
     <a href="#getting-started">Getting Started</a> •
     <a href="#usage">Usage</a> •
-    <a href="#configuration">Configuration</a> •
+    <a href="#architecture">Architecture</a> •
     <a href="#project-structure">Project Structure</a> •
-    <a href="#contributing">Contributing</a> •
-    <a href="#license">License</a>
+    <a href="#configuration">Configuration</a> •
+    <a href="#contributing">Contributing</a>
   </p>
 </p>
 
@@ -20,9 +19,9 @@
 
 ## Overview
 
-**Astra** is the official interactive mascot for the GECW Tech Fest. It combines a **Rust-powered backend** serving a real-time LLM chat API with a **React + Three.js frontend** that renders a fully procedural, animated 3D robot character directly in the browser.
+**Astra** is the official AI mascot for GECW Tech Fest. It combines a **high-performance Rust backend** (Axum + Tokio) with a **React + Three.js frontend** featuring a 3D particle galaxy interface, real-time LLM chat, and **browser-based face recognition** that greets recognized users by name.
 
-The 3D mascot features dynamic facial expressions on a glowing visor screen, gaze tracking, click reactions, floating hover physics, and a flowing cape — all built without any external 3D model files using purely procedural Three.js geometry.
+The system runs as a single binary — `cargo run` starts the server and serves the entire web UI, API, and face recognition models from one port.
 
 ---
 
@@ -30,99 +29,76 @@ The 3D mascot features dynamic facial expressions on a glowing visor screen, gaz
 
 | Feature | Description |
 |---|---|
-| 🤖 **3D Interactive Mascot** | Fully procedural Three.js character with white ceramic armor, glowing cyan accents, ear fin antennas, cape, and thruster boots |
-| 👀 **Animated Face Visor** | Dynamic canvas-textured visor with smiling eyes (`^ ^`), procedural blinking, cursor gaze tracking, and emotional expressions |
-| 💬 **Real-Time Chat** | SSE-streamed responses from the Rust backend with typing animation and speech bubble UI |
-| 🌌 **Cosmic 3D Scene** | Rotating starfield, data dust particles, neon ground projection, and studio PBR lighting with environment reflections |
-| 🎭 **Dynamic Expressions** | Happy, thinking, speaking, poked, and winking face states that react to user interaction |
-| 🔄 **Streaming Responses** | Token-by-token SSE streaming from any OpenAI-compatible local LLM |
-| 🧠 **Multi-Turn Memory** | Full conversation history maintained in-memory for context-aware follow-up responses |
-| 🔌 **LLM Fallback** | Smart fallback responses when the local LLM server is offline |
-| ⚡ **Async Rust Backend** | Built on Axum + Tokio for high-performance async serving |
+| 🎭 **Face Recognition** | Browser-side face detection + recognition via face-api.js. Recognized users are auto-greeted by name through the LLM |
+| 📸 **Face Registration** | Register faces through a glassmorphism modal — captures 128-float embeddings, no photos stored |
+| 💬 **Real-Time LLM Chat** | SSE-streamed token-by-token responses from any OpenAI-compatible local LLM |
+| 🌌 **3D Galaxy Interface** | Interactive particle field with dynamic state machine — reacts to chat activity |
+| 🧠 **Conversation Memory** | Multi-turn history persisted to disk, restored on restart |
+| 🔌 **Smart Fallback** | Context-aware fallback responses when the local LLM is offline |
+| 📊 **Terminal Logging** | Structured `tracing` logs — every API request, face registration, and LLM connection status printed to terminal |
+| ⚡ **Single Binary** | `cargo run` serves everything — web UI, API, and face models from one port |
+| 🖥️ **CLI Mode** | Terminal-only chat via `cargo run -- --cli` |
 
 ---
 
-## Architecture
+## Requirements
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     Browser (Frontend)                       │
-│  ┌─────────────┐  ┌──────────────┐  ┌───────────────────┐  │
-│  │ AstroCanvas  │  │  ChatDock    │  │  SpeechBubbles    │  │
-│  │ (Three.js)   │  │  (React)     │  │  (React)          │  │
-│  │ 3D Mascot    │  │  Input bar   │  │  Floating cards   │  │
-│  │ + Starfield  │  │  + Chips     │  │  + Dismiss        │  │
-│  └──────┬───────┘  └──────┬───────┘  └───────────────────┘  │
-│         │                  │                                  │
-│         └──── App.jsx ─────┘                                  │
-│              (State coordination)                             │
-├───────────────────────┬───────────────────────────────────────┤
-│                       │  POST /api/chat (SSE)                 │
-│                       ▼                                       │
-│            ┌─────────────────────┐                            │
-│            │   Axum Web Server   │  ← Serves web/ static     │
-│            │   (src/main.rs)     │     files + API            │
-│            ├─────────┬───────────┤                            │
-│            │ llm.rs  │ memory.rs │                            │
-│            │ Chat    │ History   │                            │
-│            └────┬────┴───────────┘                            │
-│                 │                                             │
-│                 ▼                                             │
-│      ┌─────────────────────┐                                  │
-│      │  Local LLM Server   │                                  │
-│      │  (OpenAI-compatible) │                                  │
-│      │  :8080               │                                  │
-│      └─────────────────────┘                                  │
-└───────────────────────────────────────────────────────────────┘
+### System
+
+| Requirement | Version | Purpose |
+|---|---|---|
+| **Rust** | 1.85+ (edition 2024) | Backend compilation |
+| **Node.js** | 20+ | Frontend build tooling |
+| **npm** | 10+ | Package management |
+| **Webcam** | Any USB/built-in | Face recognition (optional) |
+| **Modern Browser** | Chrome/Firefox/Edge | WebRTC for camera access |
+
+### Install Rust
+
+```bash
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```
 
----
+### Install Node.js
 
-## Prerequisites
+```bash
+# Using nvm (recommended)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+nvm install 20
+```
 
-- **Rust toolchain** (1.85+, edition 2024) — install via [rustup](https://rustup.rs/):
-  ```bash
-  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-  ```
+### Local LLM Server (Optional)
 
-- **Node.js** (v20+) — for building the frontend:
-  ```bash
-  # Using nvm (recommended)
-  nvm install 20
-  ```
+Astra connects to a local LLM server on port `8080` for AI responses. When offline, it falls back to built-in context-aware responses. Compatible servers:
 
-- **A locally running LLM server** (optional — Astra falls back to built-in responses when offline). Compatible servers:
-  - [llama.cpp](https://github.com/ggerganov/llama.cpp) — `llama-server -m <model.gguf> --port 8080`
-  - [Ollama](https://ollama.com/) — `ollama serve`
-  - [LM Studio](https://lmstudio.ai/) — start the local server from the UI
-  - [vLLM](https://github.com/vllm-project/vllm) — `vllm serve <model> --port 8080`
+| Server | Command |
+|---|---|
+| [llama.cpp](https://github.com/ggerganov/llama.cpp) | `llama-server -m <model.gguf> --port 8080` |
+| [Ollama](https://ollama.com/) | `ollama serve` |
+| [LM Studio](https://lmstudio.ai/) | Start local server from UI |
+| [vLLM](https://github.com/vllm-project/vllm) | `vllm serve <model> --port 8080` |
 
 ---
 
 ## Getting Started
 
-### 1. Clone the Repository
+### 1. Clone
 
 ```bash
-<<<<<<< HEAD
-git clone https://github.com/AsH131211/astra.git
-cd astra
-=======
 git clone https://github.com/AsH131211/Dmascott.git
 cd Dmascott
->>>>>>> 7209276 (2 st commit)
 ```
 
-### 2. Install Frontend Dependencies & Build
+### 2. Install & Build Frontend
 
 ```bash
 npm install
 npm run build
 ```
 
-This compiles the React + Three.js frontend into `web/`, which the Rust server serves as static files.
+This compiles the React frontend + face-api.js models into `web/`, served by the Rust backend.
 
-### 3. Build & Run the Server
+### 3. Run
 
 ```bash
 cargo run
@@ -131,57 +107,118 @@ cargo run
 You'll see:
 
 ```
-═════════════════════════════════════════════════════════
-✨ Astra 3D Interactive Mascot & LLM Server Started!
-🌐 Access 3D Web UI:  http://localhost:3000
-🔌 API Endpoint:      http://localhost:3000/api/chat
-💬 Terminal CLI Mode: cargo run -- --cli
-═════════════════════════════════════════════════════════
+  INFO 📂 Loaded 0 registered face(s) from disk
+  INFO LLM chat initialized (loaded 0 history messages)
+
+  ╔══════════════════════════════════════════════╗
+  ║       ✨  ASTRA — AI Mascot Server  ✨       ║
+  ╠══════════════════════════════════════════════╣
+  ║  Web UI     → http://localhost:3000          ║
+  ║  Chat API   → /api/chat  (POST, SSE)        ║
+  ║  Face API   → /api/faces (GET/POST)         ║
+  ║  CLI Mode   → cargo run -- --cli             ║
+  ╚══════════════════════════════════════════════╝
+
+  INFO Server listening on port 3000
 ```
 
-### 4. Open in Browser
+### 4. Open Browser
 
-Navigate to **http://localhost:3000** to interact with the 3D Astra mascot.
+Navigate to **http://localhost:3000** — the full 3D galaxy interface with chat and face recognition loads instantly.
 
 ---
 
 ## Usage
 
-### Web UI (3D Interactive Mode)
+### Web UI
 
-- **Move your mouse** — Astra's head and eyes track your cursor
-- **Click on Astra** — triggers a poke reaction (squeeze eyes, excited bounce)
-- **Type in the chat bar** — sends your message to the LLM backend
-- **Suggestion chips** — quick-access prompts for Events, Workshops, etc.
-- **Scroll orbit** — rotate the 3D camera around Astra
+- **Chat** — Type in the floating input bar at the bottom. Astra streams responses token-by-token.
+- **Face ID** — Click the "Face ID" button (bottom-left) to enable webcam face recognition.
+- **Register Face** — Click "Register" → enter your name → look at camera → "Capture & Register".
+- **Auto-Greeting** — Once registered, Astra automatically greets recognized users by name via the LLM.
+- **Galaxy Particles** — The 3D particle field reacts to chat state (idle / thinking / streaming).
 
-### Terminal CLI Mode
+### CLI Mode
 
 ```bash
 cargo run -- --cli
 ```
 
 ```
-Astra : Hey there! 👋 I'm Astra, your friendly Tech Fest guide!
+  ✨ Astra CLI Mode
+  Type 'exit' or 'quit' to leave.
+
+Astra: Hey there! 👋 I'm Astra, your friendly Tech Fest guide!
 
 >>> : What events are happening today?
-Astra : Great question! Let me tell you about today's lineup...
+Astra: Great question! Here's today's lineup...
 
 >>> : exit
+Astra: Bye! See you at the Tech Fest! 👋
+```
+
+### Terminal Logs (Example)
+
+All API activity is logged to the terminal with timestamps:
+
+```
+2026-09-22T14:10:51Z  INFO 📂 Loaded 2 registered face(s) from disk
+2026-09-22T14:10:51Z  INFO FaceStore: loaded 2 face(s) → [Ash, Priya]
+2026-09-22T14:10:51Z  INFO LLM chat initialized (loaded 10 history messages)
+2026-09-22T14:10:51Z  INFO Server listening on port 3000
+2026-09-22T14:11:02Z  INFO [POST /api/chat] ← "Hello Astra!"
+2026-09-22T14:11:02Z  INFO LLM connected — streaming response
+2026-09-22T14:11:03Z  INFO [POST /api/chat] → streamed 24 tokens
+2026-09-22T14:11:05Z  INFO [GET /api/faces] → returning 2 face(s)
+2026-09-22T14:11:10Z  INFO [POST /api/faces/register] ✅ Registered face: "Rahul" (total: 3)
+2026-09-22T14:11:15Z  INFO [POST /api/chat] ← "The user "Ash" has just been recognized..."
+2026-09-22T14:11:15Z  INFO LLM connected — streaming response
+2026-09-22T14:11:16Z  INFO [POST /api/chat] → streamed 18 tokens
 ```
 
 ---
 
-## Configuration
+## Architecture
 
-| Parameter | Location | Default | Description |
-|---|---|---|---|
-| **Web Server Port** | `src/main.rs` | `3000` (auto-fallback to `3001+`) | HTTP port for the web UI and API |
-| **LLM API URL** | `src/llm.rs` | `http://127.0.0.1:8080` | Local LLM server endpoint |
-| **System Prompt** | `src/llm.rs` | *"You are Astra, mascot for GECW Tech Fest..."* | Astra's personality definition |
-| **Temperature** | `src/llm.rs` | `0.7` | Response randomness (0.0–1.0) |
-| **Max Tokens** | `src/llm.rs` | `1000` | Token limit per response |
-| **Static Files Dir** | `src/main.rs` | `web/` | Frontend build output directory |
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Browser (Frontend)                       │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────────────┐  │
+│  │ ParticleField │  │  ChatDock    │  │  FaceRecognition     │  │
+│  │ (Three.js)    │  │  (React)     │  │  (face-api.js)       │  │
+│  │ 3D Galaxy     │  │  Chat input  │  │  Webcam + detection  │  │
+│  └──────┬────────┘  └──────┬───────┘  └──────┬───────────────┘  │
+│         │                  │                  │                  │
+│         └────── App.jsx ───┴──────────────────┘                  │
+│                (State coordination)                              │
+├─────────────────┬──────────────────────┬────────────────────────┤
+│                 │ POST /api/chat (SSE) │ GET/POST /api/faces    │
+│                 ▼                      ▼                        │
+│       ┌──────────────────────────────────────┐                  │
+│       │         Axum Web Server              │                  │
+│       │         (src/main.rs)                │                  │
+│       ├──────┬──────────┬────────┬───────────┤                  │
+│       │ llm  │ memory   │ face   │ io        │                  │
+│       │ .rs  │ .rs      │ .rs    │ .rs       │                  │
+│       └──┬───┴──────────┴────┬───┴───────────┘                  │
+│          │                   │                                   │
+│          ▼                   ▼                                   │
+│   ┌─────────────┐    ┌─────────────────┐                        │
+│   │ Local LLM   │    │ data/            │                        │
+│   │ Server:8080 │    │ known_faces.json │                        │
+│   └─────────────┘    │ chat_history.json│                        │
+│                      └─────────────────┘                        │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `/api/status` | Server status + registered face count |
+| `POST` | `/api/chat` | Send message, receive SSE-streamed response |
+| `GET` | `/api/faces` | List all registered face descriptors |
+| `POST` | `/api/faces/register` | Register a new face (name + 128-float descriptor) |
 
 ---
 
@@ -189,59 +226,94 @@ Astra : Great question! Let me tell you about today's lineup...
 
 ```
 astra/
-├── Cargo.toml              # Rust package manifest
-├── Cargo.lock              # Locked dependency versions
-├── package.json            # Node.js manifest (frontend build)
-├── vite.config.js          # Vite bundler config
-├── .gitignore
-├── README.md
+├── Cargo.toml                  # Rust dependencies
+├── package.json                # Node.js dependencies
+├── vite.config.js              # Vite build config (frontend → web/)
 │
-├── src/                    # Rust Backend
-│   ├── main.rs             # Axum server — static file serving + API routes
-│   ├── llm.rs              # LLM client — SSE streaming, fallback responses
-│   ├── memory.rs           # Multi-turn conversation memory
-│   └── io.rs               # Terminal I/O for CLI mode
+├── src/                        # ── Rust Backend ──────────────────
+│   ├── main.rs                 # Axum server, routes, tracing, startup
+│   ├── llm.rs                  # LLM client — SSE streaming + fallback
+│   ├── face.rs                 # FaceStore — register, list, persist
+│   ├── memory.rs               # Chat history persistence
+│   └── io.rs                   # Terminal I/O for CLI mode
 │
-├── frontend/               # React + Three.js Frontend Source
-│   ├── src/
-│   │   ├── main.jsx        # React entry point
-│   │   ├── App.jsx         # Root component — state coordination
-│   │   ├── App.css         # Global styles
-│   │   ├── components/
-│   │   │   ├── AstroCanvas.jsx    # Three.js 3D viewport & animation loop
-│   │   │   ├── ChatDock.jsx       # Floating chat input bar
-│   │   │   ├── SpeechBubbles.jsx  # 3D-projected message bubbles
-│   │   │   └── TopNav.jsx         # Brand badge
-│   │   └── utils/
-│   │       └── astra3DModel.js    # Procedural 3D mascot builder
-│   └── public/             # Static assets
+├── frontend/                   # ── React Frontend ────────────────
+│   ├── index.html              # Entry HTML
+│   ├── public/
+│   │   └── models/             # face-api.js neural network weights
+│   │       ├── tiny_face_detector_model-*
+│   │       ├── face_landmark_68_model-*
+│   │       └── face_recognition_model-*
+│   └── src/
+│       ├── main.jsx            # React entry
+│       ├── App.jsx             # Root — chat + face recognition integration
+│       ├── App.css             # Galaxy theme styles
+│       └── components/
+│           ├── ChatDock.jsx         # Floating chat input bar
+│           ├── FaceRecognition.jsx  # Webcam + face detection/matching
+│           ├── FaceRecognition.css  # Glassmorphism face UI styles
+│           ├── FaceRegistration.jsx # Face capture + registration modal
+│           ├── ParticleField.jsx    # Re-export wrapper
+│           └── ParticleBackground/  # 3D particle galaxy engine
+│               ├── ParticleBackground.jsx
+│               ├── particleEngine.js
+│               ├── particleBehaviors.js
+│               ├── particleConfig.js
+│               ├── particleEvents.js
+│               ├── particleStateMachine.js
+│               └── shaders/
 │
-└── web/                    # Production build output (served by Rust)
-    ├── index.html
-    └── assets/
-        ├── index-*.js      # Bundled JS
-        └── index-*.css     # Bundled CSS
+├── data/                       # ── Persisted Data ────────────────
+│   ├── chat_history.json       # Conversation memory
+│   └── known_faces.json        # Registered face descriptors
+│
+├── models/                     # ── ML Models ─────────────────────
+│   └── yunet.onnx              # YuNet face detection model (unused)
+│
+└── web/                        # ── Production Build Output ───────
+    ├── index.html              # Built by Vite
+    ├── assets/                 # Bundled JS + CSS
+    └── models/                 # face-api.js weights (copied from public/)
 ```
 
 ### Backend Dependencies
 
 | Crate | Purpose |
 |---|---|
-| [`axum`](https://crates.io/crates/axum) | Web framework — routing, middleware |
+| [`axum`](https://crates.io/crates/axum) | Web framework — routing, middleware, SSE |
 | [`tokio`](https://crates.io/crates/tokio) | Async runtime |
-| [`tower-http`](https://crates.io/crates/tower-http) | Static file serving, CORS |
+| [`tower-http`](https://crates.io/crates/tower-http) | Static file serving, CORS, request tracing |
 | [`reqwest`](https://crates.io/crates/reqwest) | HTTP client for LLM API |
 | [`serde`](https://crates.io/crates/serde) / [`serde_json`](https://crates.io/crates/serde_json) | JSON serialization |
+| [`tracing`](https://crates.io/crates/tracing) / [`tracing-subscriber`](https://crates.io/crates/tracing-subscriber) | Structured terminal logging |
 | [`async-stream`](https://crates.io/crates/async-stream) | SSE token streaming |
+| [`chrono`](https://crates.io/crates/chrono) | Timestamp formatting |
 
 ### Frontend Dependencies
 
 | Package | Purpose |
 |---|---|
 | [`react`](https://react.dev/) | UI framework |
-| [`three`](https://threejs.org/) | 3D rendering engine |
+| [`three`](https://threejs.org/) | 3D particle galaxy rendering |
+| [`face-api.js`](https://github.com/justadudewhohacks/face-api.js) | Browser-side face detection + recognition |
 | [`vite`](https://vite.dev/) | Build tooling |
 | [`lucide-react`](https://lucide.dev/) | Icon library |
+
+---
+
+## Configuration
+
+| Parameter | File | Default | Description |
+|---|---|---|---|
+| Server Port | `src/main.rs` | `3000` (auto-fallback `3001+`) | HTTP port for web UI + API |
+| LLM API URL | `src/llm.rs` | `http://127.0.0.1:8080` | Local LLM server endpoint |
+| System Prompt | `src/llm.rs` | *"You are Astra, mascot for Tech Fest..."* | Astra's personality |
+| Temperature | `src/llm.rs` | `0.7` | Response randomness (0.0–1.0) |
+| Max Tokens | `src/llm.rs` | `1024` | Token limit per response |
+| Face Match Threshold | `FaceRecognition.jsx` | `0.6` | Euclidean distance threshold (lower = stricter) |
+| Detection Interval | `FaceRecognition.jsx` | `600ms` | Face detection loop frequency |
+| Chat History Limit | `src/memory.rs` | `10` messages | Max saved conversation turns |
+| Faces Storage | `src/face.rs` | `data/known_faces.json` | Registered face descriptors file |
 
 ---
 
@@ -252,34 +324,42 @@ astra/
 3. **Commit** with descriptive messages: `git commit -m "feat: add new expression state"`
 4. **Push** and open a Pull Request
 
-### Guidelines
+### Code Quality
 
-- Rust: `cargo fmt` + `cargo clippy` with no warnings
-- Frontend: consistent code style, no console warnings
-- Follow [Conventional Commits](https://www.conventionalcommits.org/)
+```bash
+# Rust
+cargo fmt          # Format code
+cargo clippy       # Lint — must pass with no warnings
+
+# Frontend
+npm run build      # Must build with no errors
+```
 
 ---
 
 ## Roadmap
 
-- [x] 3D interactive web mascot with Three.js
-- [x] SSE streaming chat with Rust backend
-- [x] Procedural facial expressions and gaze tracking
-- [x] Multi-turn conversation memory
-- [ ] Environment variable / config file support
+- [x] 3D interactive galaxy interface with Three.js
+- [x] SSE streaming chat with Rust Axum backend
+- [x] Multi-turn conversation memory (persisted)
+- [x] Browser-based face recognition (face-api.js)
+- [x] Face registration with glassmorphism UI
+- [x] Auto-greeting recognized users via LLM
+- [x] Structured terminal logging (tracing)
+- [x] Smart fallback responses when LLM is offline
 - [ ] Voice input / TTS output
-- [ ] Conversation export (save chat history)
+- [ ] Multiple face captures per person (improved accuracy)
+- [ ] Admin panel for managing registered faces
 - [ ] Mobile touch gesture support
-- [ ] Multiplayer / shared mascot sessions
 
 ---
 
 ## License
 
-This project is open source. Add a `LICENSE` file to specify your preferred license.
+This project is open source. See `LICENSE` for details.
 
 ---
 
 <p align="center">
-  Built with 🦀 Rust, ⚛️ React, 🎮 Three.js, and ❤️ for GECW Tech Fest
+  Built with 🦀 Rust, ⚛️ React, 🎮 Three.js, 🧠 face-api.js, and ❤️ for GECW Tech Fest
 </p>
