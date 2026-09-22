@@ -15,61 +15,20 @@
 node_modules/
 frontend/node_modules/
 
-# Vite build output (served by Rust backend from web/)
-# web/ is the production build — commit it for deployment
-# Uncomment below if you prefer to build on deploy instead:
+# Vite build output
+# /web/ is the production build — commit it for deployment
+# Uncomment if you prefer to build on deploy:
 # /web/
 
 # ========================
 #  IDE / Editor
 # ========================
-# VS Code
 .vscode/
 *.code-workspace
 
-# JetBrains (CLion, IntelliJ, RustRover)
-.idea/
-*.iml
-*.iws
-*.ipr
-out/
-
-# Vim / Neovim
-*.swp
-*.swo
-*~
-.nvimrc
-.exrc
-
-# Emacs
-\#*\#
-.#*
-
-# Sublime Text
-*.sublime-project
-*.sublime-workspace
-
-# Zed
-.zed/
-
 # ========================
-#  OS Generated
+#  OS Generated (Linux)
 # ========================
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
-.Spotlight-V100
-.Trashes
-
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-
-# Linux
 .directory
 
 # ========================
@@ -80,16 +39,31 @@ $RECYCLE.BIN/
 !.env.example
 
 # ========================
+#  Models (ML / ONNX)
+# ========================
+models/
+*.onnx
+*.pt
+*.pth
+*.h5
+*.tflite
+*.pb
+*.safetensors
+
+# ========================
+#  Data (Runtime / User)
+# ========================
+data/
+
+# ========================
 #  Miscellaneous
 # ========================
 *.log
 *.pid
-*.seed
 *.pid.lock
 *.bak
 *.tmp
 *.orig
-core
 
 # Coverage & Profiling
 *.profraw
@@ -97,12 +71,9 @@ lcov.info
 tarpaulin-report.html
 coverage/
 
-# Documentation build output
+# Documentation build
 book/
 
 # Agents / AI tooling
 .agents/
 .gemini/
-
-# Chat history data
-data/

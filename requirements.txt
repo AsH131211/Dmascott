@@ -1,0 +1,41 @@
+# ============================================
+#  Astra — Python Dependencies (Optional)
+# ============================================
+# These are optional Python packages used for
+# running the local LLM server and managing
+# ML models. The core app (Rust + React) does
+# not require Python.
+#
+# Install: pip install -r requirements.txt
+# ============================================
+
+# ----------------------------
+#  LLM Inference Servers
+# ----------------------------
+# Pick ONE of the following based on your setup:
+
+# llama-cpp-python — Python bindings for llama.cpp
+# Supports CPU & GPU inference with GGUF models
+llama-cpp-python>=0.3.0
+
+# vLLM — High-throughput LLM serving (GPU only)
+# vllm>=0.6.0
+
+# ----------------------------
+#  Model Management
+# ----------------------------
+# Hugging Face Hub — Download models from HF
+huggingface-hub>=0.25.0
+
+# ----------------------------
+#  ONNX Runtime (Face Detection)
+# ----------------------------
+# For running ONNX models like YuNet locally
+onnxruntime>=1.19.0
+
+# ----------------------------
+#  Utilities
+# ----------------------------
+numpy>=1.26.0
+requests>=2.32.0
+tqdm>=4.66.0
